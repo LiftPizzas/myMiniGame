@@ -20,7 +20,6 @@ namespace myMiniGame
 			initBlocks(true);
 			myBitmap = new Bitmap(pictureBox1.Width, pictureBox1.Height);
 			timer1.Enabled = true;
-			
 		}
 
 		void initBlocks(bool resetRules)
@@ -52,7 +51,7 @@ namespace myMiniGame
 
 		private void setRules()
 		{
-			for (int i = 0; i < 9; i++)
+			for (int i = 0; i < rule.GetLength(1); i++) 
 			{
 				rule[0, i] = r.Next(2) == 0;
 				rule[1, i] = r.Next(2) == 0;
@@ -63,9 +62,14 @@ namespace myMiniGame
 			//rule[0, 3] = true;//uncomment for Conway's rules
 			//rule[1, 3] = true;//uncomment for Conway's rules
 
+			label1.Text = makeRuleString();
+			maxTicks = Convert.ToInt16(textMaxTicks.Text);
+
+			//07/345
+			//012358/056
 		}
 
-
+		int maxTicks = 20;
 		Bitmap myBitmap;
 		Random r = new Random();
 		int maxSize = 40;
@@ -76,6 +80,9 @@ namespace myMiniGame
 		//123
 		//4 5
 		//678
+
+		int playerX = 1;
+		int playerY = 1;
 
 		private void cellTick()
 		{
@@ -112,7 +119,7 @@ namespace myMiniGame
 		{
 			tickCount++;
 			Text = tickCount.ToString();
-			if (tickCount < 20)	cellTick();
+			if (tickCount < maxTicks) cellTick();
 			int w = 16;
 			//using (Graphics g = Graphics.)
 			//{
@@ -126,27 +133,15 @@ namespace myMiniGame
 					}
 				}
 
+			g.FillEllipse(Brushes.Green, playerX * w, playerY * w, w, w);
+
 			//}
 			g.Dispose();
 
 			pictureBox1.Image = myBitmap;
 			//this.Text = r.Next(10).ToString();
 
-			/*
-			block = new bool[maxSize, maxSize];
-			for (int i = 0; i < maxSize; i++)
-			{
-				for (int j = 0; j < maxSize; j++)
-				{
-					block[i, j] = (r.Next(2) == 0);
-				}
-			}
-			*/
-			
-			for (long i = 0; i < 10000000; i++)
-			{
-				int j = 0;
-			}
+			System.Threading.Thread.Sleep(33);
 
 			timer1.Start();
 		}
@@ -162,20 +157,74 @@ namespace myMiniGame
 
 		}
 
+		private string makeRuleString()
+		{
+			string s = "";
+			for (int i = 0; i < 9; i++) if (rule[0, i]) s += i.ToString();
+			if (s.Length == 0) s += "-";
+			string t = "";
+			for (int i = 0; i < 9; i++) if (rule[1, i]) t += i.ToString();
+			if (t.Length == 0) t += "-";
+			s += "/" + t;
+			return s;
+		}
+
 		private void form_KeyDown(object sender, KeyEventArgs e)
 		{
 			if (e.KeyCode == Keys.Space) initBlocks(true);
 			if (e.KeyCode == Keys.Enter)
 			{//save this setting, display in the console
 				Console.WriteLine ("--------------- RULESET OF INTEREST ------------------");
-				string s = "";
-				for (int i = 0; i < 9; i++) s += rule[0, i].ToString() + ", ";
-				Console.WriteLine("Rule ALIVE = " + s);
-				s = "";
-				for (int i = 0; i < 9; i++) s += rule[0, i].ToString() + ", ";
-				Console.WriteLine("Rule DEAD = " + s);
+				Console.WriteLine(makeRuleString());
 			}
 			if (e.KeyCode == Keys.Back) initBlocks(false);
+
+			//player movement
+			if (e.KeyCode == Keys.Down)
+			{
+				playerY++;
+				if ((playerY >= maxSize) || (block[playerX, playerY])) playerY--;
+				//check for collisions with background maze
+			}
+			if (e.KeyCode == Keys.Up)
+			{
+				playerY--;
+				if ((playerY <= 0) || (block[playerX, playerY])) playerY++;
+				//check for collisions with background maze
+
+			}
+			if (e.KeyCode == Keys.Right)
+			{
+				//check for collisions with background maze
+				playerX++;
+				if ((playerX >= maxSize) || (block[playerX, playerY])) playerX--;
+			}
+			if (e.KeyCode == Keys.Left)
+			{
+				//check for collisions with background maze
+				playerX--;
+				if ((playerX <= 0) || (block[playerX, playerY])) playerX++;
+			}
+		}
+
+
+
+		private void bUp_Click(object sender, EventArgs e)
+		{
+			maxTicks++;
+			textMaxTicks.Text = maxTicks.ToString();
+		}
+
+		private void bDown_Click(object sender, EventArgs e)
+		{
+			maxTicks++;
+			maxTicks = Math.Max(maxTicks, 1);
+			textMaxTicks.Text = maxTicks.ToString();
+		}
+
+		private void Form1_MouseClick(object sender, MouseEventArgs e)
+		{
+			Focus();
 		}
 	}
 }
