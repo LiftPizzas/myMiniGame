@@ -203,6 +203,14 @@ namespace myMiniGame
 						if (distLeft < closestDist)
 						{ //(L) R
 							closestDist = distLeft;
+							if (distRight < closestDist)
+							{// Right is the answer
+								moveX = 1;
+							}
+							else
+							{// Left is the answer
+								moveX = -1;
+							}
 						}
 						else
 						{//[UDL] R
