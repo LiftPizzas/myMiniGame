@@ -13,9 +13,13 @@ namespace myMiniGame
 	public partial class Form1 : Form
 	{
 		int maxEnemies = 4;
-		int[] enemyX, enemyY, targetX, targetY;
+		int[] enemyX, enemyY, targetX, targetY, moveX, moveY;
 		int[] enemyTrapped;
 		int enemyTimer = 0;
+		int[] enemyLine;
+		int[] enemyStrategy;
+
+		int[] dtX, dtY; //debug Target Display positions
 
 		int maxTicks = 20;
 		Bitmap myBitmap;
@@ -31,8 +35,8 @@ namespace myMiniGame
 
 		int playerX = 1;
 		int playerY = 1;
-
-
+		int[] lastX, lastY;
+		int lastPointer = 0;
 
 		public Form1()
 		{
@@ -43,19 +47,33 @@ namespace myMiniGame
 			myBitmap = new Bitmap(pictureBox1.Width, pictureBox1.Height);
 			enemyX = new int[maxEnemies];
 			enemyY = new int[maxEnemies];
+			moveX = new int[maxEnemies];
+			moveY = new int[maxEnemies];
 			targetX = new int[maxEnemies];
 			targetY = new int[maxEnemies];
+			dtX = new int[maxEnemies];
+			dtY = new int[maxEnemies];
 			enemyTrapped = new int[maxEnemies];
+			enemyStrategy = new int[maxEnemies];
+			enemyLine = new int[maxEnemies];
+			lastX = new int[10];
+			lastY = new int[10];
 			initEnemies();
 		}
 
 		void initEnemies()
 		{
+			for (int i = 0; i < lastX.Length; i++) { lastX[i] = playerX; lastY[i] = playerY; }
 			//reset enemy position
 			enemyX[0] = 10; enemyY[0] = 10;
 			enemyX[1] = 20; enemyY[1] = 10;
 			enemyX[2] = 20; enemyY[2] = 20;
 			enemyX[3] = 10; enemyY[3] = 20;
+			for (int i = 0; i < maxEnemies; i++)
+			{
+				enemyStrategy[i] = i; //r.Next(3);
+				// 0 direct, 1 headoff, 2 behind, 3 wander
+			}
 		}
 
 		void initBlocks(bool resetRules)
@@ -84,151 +102,82 @@ namespace myMiniGame
 			//AI Stuff here:
 			for (int i = 0; i < maxEnemies; i++)// for each enemy:
 			{
-				targetX[i] = playerX;// find player's position and create a target location to go after
-				targetY[i] = playerY;
-
-				// for each direction to move, get a distance that will be from target if we move this way
-				//which direction is closer:
-				double distUp = (Math.Pow((targetX[i] - enemyX[i]), 2) + Math.Pow((targetY[i] - (enemyY[i] - 1)), 2));
-				double distDown = (Math.Pow((targetX[i] - enemyX[i]), 2) + Math.Pow((targetY[i] - (enemyY[i] + 1)), 2));
-				double distLeft = (Math.Pow((targetX[i] - (enemyX[i] - 1)), 2) + Math.Pow((targetY[i] - enemyY[i]), 2));
-				double distRight = (Math.Pow((targetX[i] - (enemyX[i] + 1)), 2) + Math.Pow((targetY[i] - enemyY[i]), 2));
-				//determine which of the four directions gets us closest to our target
-				if (block[enemyX[i], enemyY[i]-1]) distUp = 9999999999D;
-				if (block[enemyX[i], enemyY[i]+1]) distDown = 9999999999D;
-				if (block[enemyX[i]-1, enemyY[i]]) distLeft = 9999999999D;
-				if (block[enemyX[i]+1, enemyY[i]]) distRight = 9999999999D;
-
-				int moveX = 0;
-				int moveY = 0;
-
-				double closestDist = 9999999999D;
-
-				/*
-				if ((distUp < closestDist) && (distUp < distDown) && (distUp < distLeft) && (distUp < distRight)) { moveY = -1; }
-				else if ((distDown < closestDist) && (distDown < distUp) && (distDown < distLeft) && (distDown < distRight)) { moveY = 1; }
-				else if ((distLeft < closestDist) && (distLeft < distUp) && (distLeft < distDown) && (distLeft < distRight)) { moveX = -1; }
-				else if ((distRight < closestDist) && (distRight < distUp) && (distRight < distLeft) && (distRight < distDown)) { moveX = 1; }
-				else {// no valid move}
-				*/
-
-				if (distUp < closestDist)
-				{ // (U) D L R
-					closestDist = distUp;
-					if (distDown < closestDist)
-					{ // (D) L R
-						closestDist = distDown;
-						if (distLeft < closestDist)
-						{ // (L) R
-							closestDist = distLeft;
-							if (distRight < closestDist)
-							{ // Right is the answer
-								moveX = 1;
-							}
-							else
-							{// Left is the answer
-								moveX = -1;
-							}
-						}
-						else
-						{ // (D) R
-							if (distRight < closestDist)
-							{ // Right is the answer
-								moveX = 1;
-							}
-							else
-							{// Down is the answer
-								moveY = 1;
-							}
-						}
-					}
-					else
-					{ // (U) [D] L R
-						if (distLeft < closestDist)
-						{ // (L) R
-							closestDist = distLeft;
-							if (distRight < closestDist)
-							{ // Right is the answer
-								moveX = 1;
-							}
-							else
-							{// Left is the answer
-								moveX = -1;
-							}
-						}
-						else
-						{//(U) R
-							if (distRight < closestDist)
-							{ // Right is the answer
-								moveX = 1;
-							}
-							else
-							{// Up is the answer
-								moveY = -1;
-							}
-						}
-					}
-				}
-				else
-				{ //[U] (DLR)
-					if (distDown < closestDist)
-					{ //[U] (D) LR
-						closestDist = distDown;
-						if (distLeft < closestDist)
-						{ //(L) R
-							closestDist = distLeft;
-							if (distRight < closestDist)
-							{// Right is the answer
-								moveX = 1;
-							}
-							else
-							{ //Left is the answer
-								moveX = -1;
-							}
-						}
-						else
-						{ //(D) R
-							if (distRight < closestDist)
-							{// Right is the answer
-								moveX = 1;
-							}
-							else
-							{//Down is the answer
-								moveY = 1;
-							}
-						}
-					}
-					else
-					{ //[UD] LR
-						if (distLeft < closestDist)
-						{ //(L) R
-							closestDist = distLeft;
-							if (distRight < closestDist)
-							{// Right is the answer
-								moveX = 1;
-							}
-							else
-							{// Left is the answer
-								moveX = -1;
-							}
-						}
-						else
-						{//[UDL] R
-							if (distRight < closestDist)
-							{// Right is the answer
-								moveX = 1;
-							}
-							else
-							{// none were closest, no valid move to be made
-								enemyTrapped[i]++;
-							}
-						}
-					}
-				}
 				
+				enemyLine[i]--;
+				if (enemyLine[i] <= 0)
+				{
+					moveX[i] = 0;
+					moveY[i] = 0;
+					enemyLine[i] = r.Next(10);
+					if (enemyStrategy[i] == 0)
+					{
+						targetX[i] = playerX;// find player's position and create a target location to go after
+						targetY[i] = playerY;
+					}
+					else if (enemyStrategy[i] == 1) // try to get ahead of player
+					{ //use last movement, project into the future by 4 moves
+						int tPointer = lastPointer - 4;
+						if (tPointer < 0) tPointer += lastX.Length;
+						targetX[i] = playerX + (playerX - lastX[tPointer]);
+						targetY[i] = playerY + (playerY - lastY[tPointer]);
+					}
+					else if (enemyStrategy[i] == 2)
+					{
+						int tPointer = lastPointer - 4;
+						if (tPointer < 0) tPointer += lastX.Length;
+						targetX[i] = lastX[tPointer];
+						targetY[i] = lastY[tPointer];
+					}
+					else
+					{ //just wander toward a random target
+						targetX[i] = r.Next(maxSize - 2) + 1;
+						targetY[i] = r.Next(maxSize - 2) + 1;
+					}
+					dtX[i] = targetX[i];
+					dtY[i] = targetY[i];
+
+					// for each direction to move, get a distance that will be from target if we move this way
+					//which direction is closer:
+					double distUp = (Math.Pow((targetX[i] - enemyX[i]), 2) + Math.Pow((targetY[i] - (enemyY[i] - 1)), 2));
+					double distDown = (Math.Pow((targetX[i] - enemyX[i]), 2) + Math.Pow((targetY[i] - (enemyY[i] + 1)), 2));
+					double distLeft = (Math.Pow((targetX[i] - (enemyX[i] - 1)), 2) + Math.Pow((targetY[i] - enemyY[i]), 2));
+					double distRight = (Math.Pow((targetX[i] - (enemyX[i] + 1)), 2) + Math.Pow((targetY[i] - enemyY[i]), 2));
+					//determine which of the four directions gets us closest to our target
+					if (block[enemyX[i], enemyY[i] - 1]) distUp = 9999999999D;
+					if (block[enemyX[i], enemyY[i] + 1]) distDown = 9999999999D; //note Target can be out of bounds
+					if (block[enemyX[i] - 1, enemyY[i]]) distLeft = 9999999999D; // and movement can bring them out of bounds here
+					if (block[enemyX[i] + 1, enemyY[i]]) distRight = 9999999999D; //need to restrict position to (1 to size-1) or double check edges before moving
+
+					double closestDist = 9999999999D;
+					if ((distUp < closestDist) && (distUp <= distDown) && (distUp <= distLeft) && (distUp <= distRight)) { moveY[i] = -1; }
+					else if ((distDown < closestDist) && (distDown <= distUp) && (distDown <= distLeft) && (distDown <= distRight)) { moveY[i] = 1; }
+					else if ((distLeft < closestDist) && (distLeft <= distUp) && (distLeft <= distDown) && (distLeft <= distRight)) { moveX[i] = -1; }
+					else if ((distRight < closestDist) && (distRight <= distUp) && (distRight <= distLeft) && (distRight <= distDown)) { moveX[i] = 1; }
+					else
+					{
+						enemyTrapped[i]++; // no valid move
+					}
+				}
 				//put the enemy in the new found better position
-				enemyX[i] += moveX;
-				enemyY[i] += moveY;
+				enemyX[i] += moveX[i];
+				enemyY[i] += moveY[i];
+
+				if ((enemyX[i] <= 0) || (enemyX[i] >= maxSize))
+				{
+					enemyX[i] -= moveX[i];
+					enemyLine[i] = 0;
+				}
+				if ((enemyY[i] <= 0) || (enemyY[i] >= maxSize))
+				{
+					enemyY[i] -= moveY[i];
+					enemyLine[i] = 0;
+				}
+				if (block[enemyX[i], enemyY[i]])
+				{
+					enemyLine[i] = 0;
+					enemyX[i] -= moveX[i];
+					enemyY[i] -= moveY[i];
+				}
 
 				//if enemy is trapped handle this situation
 
@@ -328,6 +277,12 @@ namespace myMiniGame
 			g.FillEllipse(Brushes.Orange, enemyX[2] * w, enemyY[2] * w, w, w);
 			g.FillEllipse(Brushes.Red, enemyX[3] * w, enemyY[3] * w, w, w);
 
+			g.FillEllipse(Brushes.LightGoldenrodYellow, dtX[0] * w, dtY[0] * w, w, w);
+			g.FillEllipse(Brushes.LightBlue, dtX[1] * w, dtY[1] * w, w, w);
+			g.FillEllipse(Brushes.LightGray, dtX[2] * w, dtY[2] * w, w, w);
+			g.FillEllipse(Brushes.LightPink, dtX[3] * w, dtY[3] * w, w, w);
+
+
 			//}
 			g.Dispose();
 
@@ -336,7 +291,7 @@ namespace myMiniGame
 
 			System.Threading.Thread.Sleep(33);
 			enemyTimer++;
-			if (enemyTimer > 29)
+			if (enemyTimer > 6)
 			{
 				enemyTimer = 0;
 				mainLoop();
@@ -363,6 +318,14 @@ namespace myMiniGame
 			return s;
 		}
 
+		private void playerMoved()
+		{
+			lastPointer++;
+			if (lastPointer >= lastX.Length) lastPointer = 0;
+			lastX[lastPointer] = playerX;
+			lastY[lastPointer] = playerY;
+		}
+
 		private void form_KeyDown(object sender, KeyEventArgs e)
 		{
 			if (e.KeyCode == Keys.Space) initBlocks(true);
@@ -379,25 +342,28 @@ namespace myMiniGame
 				playerY++;
 				if ((playerY >= maxSize) || (block[playerX, playerY])) playerY--;
 				//check for collisions with background maze
+				playerMoved();
 			}
 			if (e.KeyCode == Keys.Up)
 			{
 				playerY--;
 				if ((playerY <= 0) || (block[playerX, playerY])) playerY++;
 				//check for collisions with background maze
-
+				playerMoved();
 			}
 			if (e.KeyCode == Keys.Right)
 			{
 				//check for collisions with background maze
 				playerX++;
 				if ((playerX >= maxSize) || (block[playerX, playerY])) playerX--;
+				playerMoved();
 			}
 			if (e.KeyCode == Keys.Left)
 			{
 				//check for collisions with background maze
 				playerX--;
 				if ((playerX <= 0) || (block[playerX, playerY])) playerX++;
+				playerMoved();
 			}
 		}
 
