@@ -37,10 +37,27 @@ namespace myMiniGame
 		int playerY = 1;
 		int[] lastX, lastY;
 		int lastPointer = 0;
+		
+		int[][] enemyTrailX; //enemy number, position in trail
+		int[][] enemyTrailY;
+		int maxTrailLength = 40;
+		int[] enemyTrailPosition;
 
 		public Form1()
 		{
 			InitializeComponent();
+
+			//initialize search stuff
+			
+			enemyTrailX = new int[maxEnemies][];
+			enemyTrailY = new int[maxEnemies][];
+			for (int i = 0; i < maxEnemies; i++)
+			{
+				enemyTrailX[i] = new int[maxTrailLength];
+				enemyTrailY[i] = new int[maxTrailLength];
+			}
+			enemyTrailPosition = new int[maxEnemies];
+
 			block = new bool[maxSize, maxSize];
 			buffer = new bool[maxSize, maxSize];
 			initBlocks(true);
@@ -103,8 +120,8 @@ namespace myMiniGame
 			for (int i = 0; i < maxEnemies; i++)// for each enemy:
 			{
 				
-				enemyLine[i]--;
-				if (enemyLine[i] <= 0)
+				enemyLine[i]--; //fixme: check to see if end of trail is hit
+				if (enemyTrailPosition[i] >= enemyTrailX[i].Length || enemyLine[i] <= 0)//decide when the enemy needs to make a new trail
 				{
 					moveX[i] = 0;
 					moveY[i] = 0;
@@ -136,50 +153,122 @@ namespace myMiniGame
 					dtX[i] = targetX[i];
 					dtY[i] = targetY[i];
 
-					// for each direction to move, get a distance that will be from target if we move this way
-					//which direction is closer:
-					double distUp = (Math.Pow((targetX[i] - enemyX[i]), 2) + Math.Pow((targetY[i] - (enemyY[i] - 1)), 2));
-					double distDown = (Math.Pow((targetX[i] - enemyX[i]), 2) + Math.Pow((targetY[i] - (enemyY[i] + 1)), 2));
-					double distLeft = (Math.Pow((targetX[i] - (enemyX[i] - 1)), 2) + Math.Pow((targetY[i] - enemyY[i]), 2));
-					double distRight = (Math.Pow((targetX[i] - (enemyX[i] + 1)), 2) + Math.Pow((targetY[i] - enemyY[i]), 2));
-					//determine which of the four directions gets us closest to our target
-					if (block[enemyX[i], enemyY[i] - 1]) distUp = 9999999999D;
-					if (block[enemyX[i], enemyY[i] + 1]) distDown = 9999999999D; //note Target can be out of bounds
-					if (block[enemyX[i] - 1, enemyY[i]]) distLeft = 9999999999D; // and movement can bring them out of bounds here
-					if (block[enemyX[i] + 1, enemyY[i]]) distRight = 9999999999D; //need to restrict position to (1 to size-1) or double check edges before moving
+					int[,] searchCells = new int[maxSize, maxSize];
+					int[] leafListX = new int[1600];
+					int[] leafListY = new int[1600];
+					int numLeaves = 1;
+					int currentLeaf = 0;
+					leafListX[0] = targetX[i];
+					leafListY[0] = targetY[i];
+					bool doneFlag = false;
+					int trailLength = 1;
+					bool successFlag = false;
 
-					double closestDist = 9999999999D;
-					if ((distUp < closestDist) && (distUp <= distDown) && (distUp <= distLeft) && (distUp <= distRight)) { moveY[i] = -1; }
-					else if ((distDown < closestDist) && (distDown <= distUp) && (distDown <= distLeft) && (distDown <= distRight)) { moveY[i] = 1; }
-					else if ((distLeft < closestDist) && (distLeft <= distUp) && (distLeft <= distDown) && (distLeft <= distRight)) { moveX[i] = -1; }
-					else if ((distRight < closestDist) && (distRight <= distUp) && (distRight <= distLeft) && (distRight <= distDown)) { moveX[i] = 1; }
+					while (!doneFlag)
+					{
+
+						// for each leaf in the list
+						//check each of the 4 neighbors
+
+						int tx = leafListX[currentLeaf] - 1; //to the left
+						int ty = leafListY[currentLeaf];
+						if (tx < 1) tx = 1; else if (tx >= maxSize-3) tx = maxSize-3;
+						if (ty < 1) ty = 1; else if (ty >= maxSize-3) ty = maxSize-3;
+						if (!block[tx, ty] && (searchCells[tx, ty] == 0))//if the neighbor is empty and not already filled in
+						{// give it a position number and add it to the leaf list
+							if ((tx == enemyX[i]) && (ty == enemyY[i])) { doneFlag = true; successFlag = true; }
+							searchCells[tx, ty] = trailLength;
+							leafListX[numLeaves] = tx;
+							leafListY[numLeaves] = ty;
+							numLeaves++;
+						}
+
+						//right
+						tx += 2;
+						if (!block[tx, ty] && (searchCells[tx, ty] == 0))//if the neighbor is empty and not already filled in
+						{// give it a position number and add it to the leaf list
+							if ((tx == enemyX[i]) && (ty == enemyY[i])) { doneFlag = true; successFlag = true; }
+							searchCells[tx, ty] = trailLength;
+							leafListX[numLeaves] = tx;
+							leafListY[numLeaves] = ty;
+							numLeaves++;
+						}
+
+						//above
+						tx -= 1;
+						ty -= 1;
+						if (!block[tx, ty] && (searchCells[tx, ty] == 0))//if the neighbor is empty and not already filled in
+						{// give it a position number and add it to the leaf list
+							if ((tx == enemyX[i]) && (ty == enemyY[i])) { doneFlag = true; successFlag = true; }
+							searchCells[tx, ty] = trailLength;
+							leafListX[numLeaves] = tx;
+							leafListY[numLeaves] = ty;
+							numLeaves++;
+						}
+
+						//below
+						ty += 2;
+						if (!block[tx, ty] && (searchCells[tx, ty] == 0))//if the neighbor is empty and not already filled in
+						{// give it a position number and add it to the leaf list
+							if ((tx == enemyX[i]) && (ty == enemyY[i])) { doneFlag = true; successFlag = true; }
+							searchCells[tx, ty] = trailLength;
+							leafListX[numLeaves] = tx;
+							leafListY[numLeaves] = ty;
+							numLeaves++;
+						}
+						trailLength++; //increment the trail counter
+
+						//iterate leaf list, update our pointer
+						currentLeaf++;//check if any leaves left
+						if ((currentLeaf > leafListX.Length) || (currentLeaf >= numLeaves)) doneFlag = true;
+					}
+					 
+					if (successFlag)
+					{//assemble the trail from the last position to the target
+					 //starting at enemyY we're going to find the lowest neighbor
+						int trailBest = 9999999;
+						trailLength = 0;
+						int tx = enemyX[i];
+						int ty = enemyY[i];
+
+						while (trailBest > 0)
+						{
+							int dx = 0;
+							int dy = 0; //winning directions
+							//find the lowest neighbor:
+							int cx = tx -1;
+							int cy = ty; //check to the left
+							if ((searchCells[cx, cy] < trailBest) && (searchCells[cx, cy] != 0)) dx = -1; dy = 0;
+							cx += 2; //to the right
+							if ((searchCells[cx, cy] < trailBest) && (searchCells[cx, cy] != 0)) dx = 1; dy = 0;
+							cx --;
+							cy--; //check above
+							if ((searchCells[cx, cy] < trailBest) && (searchCells[cx, cy] != 0)) dx = 0; dy = -1;
+							//check below
+							cy += 2;
+							if ((searchCells[cx, cy] < trailBest) && (searchCells[cx, cy] != 0)) dx = 0; dy = 1;
+							//now we've found the lowest, add that to the trail and update current pointer
+							trailLength++;
+							tx += dx;
+							ty += dy;
+							enemyTrailX[i][trailLength] = tx;
+							enemyTrailY[i][trailLength] = ty;
+							if (dx == 0 && dy == 0 || trailLength >= maxTrailLength-1) break;
+							//enemytrail x and y now contains the XY coordinates of the trail cells of the desired path
+							enemyTrailPosition[i] = 0;
+						}
+
+					}
 					else
 					{
-						enemyTrapped[i]++; // no valid move
+						//just move randomly
 					}
-				}
-				//put the enemy in the new found better position
-				enemyX[i] += moveX[i];
-				enemyY[i] += moveY[i];
 
-				if ((enemyX[i] <= 0) || (enemyX[i] >= maxSize))
-				{
-					enemyX[i] -= moveX[i];
-					enemyLine[i] = 0;
-				}
-				if ((enemyY[i] <= 0) || (enemyY[i] >= maxSize))
-				{
-					enemyY[i] -= moveY[i];
-					enemyLine[i] = 0;
-				}
-				if (block[enemyX[i], enemyY[i]])
-				{
-					enemyLine[i] = 0;
-					enemyX[i] -= moveX[i];
-					enemyY[i] -= moveY[i];
 				}
 
-				//if enemy is trapped handle this situation
+				//figure out where the enemy's next move wants to be along the current path
+				enemyX[i] += enemyTrailX[i][enemyTrailPosition[i]];
+				enemyY[i] += enemyTrailY[i][enemyTrailPosition[i]];
 
 				//check for collisions with player
 
