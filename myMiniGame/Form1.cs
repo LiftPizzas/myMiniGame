@@ -8,6 +8,12 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
+//fixme: player movement, smooth movement for everything.
+//fixme: alternate behavior: random wandering until they find player's "scent trail" and then start following it (quickly) toward the player
+//fixme: flashing status for "alerted" enemies.
+//fixme: choose target in radius of player instead of projecting ahead/behind?
+//fixme: improve graphics, use sprites for player/enemies and something for maze walls
+
 namespace myMiniGame
 {
 	public partial class Form1 : Form
@@ -37,7 +43,10 @@ namespace myMiniGame
 		int playerY = 1;
 		int[] lastX, lastY;
 		int lastPointer = 0;
-		
+		int playerMoveX, playerMoveY;
+		int playerTimer = 0;
+
+		bool isCalculating = true;
 		int[][] enemyTrailX; //enemy number, position in trail
 		int[][] enemyTrailY;
 		int maxTrailLength = 40;
@@ -78,7 +87,6 @@ namespace myMiniGame
 			enemyLine = new int[maxEnemies];
 			lastX = new int[10];
 			lastY = new int[10];
-			initEnemies();
 		}
 
 		void initEnemies()
@@ -104,6 +112,7 @@ namespace myMiniGame
 
 		void initBlocks(bool resetRules)
 		{
+			isCalculating = true;
 			if (resetRules) setRules();
 			tickCount = 0;
 			for (int i = 0; i < maxSize; i++)
@@ -125,11 +134,12 @@ namespace myMiniGame
 
 		void mainLoop()
 		{
+			if (isCalculating) return;
 			//AI Stuff here:
 			for (int i = 0; i < maxEnemies; i++)// for each enemy:
 			{
-				
-				enemyLine[i]--; //fixme: check to see if end of trail is hit
+
+				enemyLine[i]--;
 				if (enemyTrailPosition[i] >= trailLength[i]-1 || enemyLine[i] <= 0)//decide when the enemy needs to make a new trail
 				{
 					enemyTrailPosition[i]=0;
@@ -148,7 +158,7 @@ namespace myMiniGame
 						targetX[i] = playerX + (playerX - lastX[tPointer]);
 						targetY[i] = playerY + (playerY - lastY[tPointer]);
 					}
-					else if (enemyStrategy[i] == 2)
+					else if (enemyStrategy[i] == 2)//follow player's trail
 					{
 						int tPointer = lastPointer - 4;
 						if (tPointer < 0) tPointer += lastX.Length;
@@ -250,7 +260,7 @@ namespace myMiniGame
 						//iterate leaf list, update our pointer
 						currentLeaf++;//check if any leaves left
 						if ((currentLeaf > leafListX.Length) || (currentLeaf >= numLeaves)) doneFlag = true;
-						//showSearch(searchCells);
+						
 					}
 
 					if (successFlag)
@@ -265,19 +275,40 @@ namespace myMiniGame
 						{
 							int dx = 0;
 							int dy = 0; //winning directions
+
 							//find the lowest neighbor:
 							int cx = tx -1;
 							int cy = ty; //check to the left
-							//PUT THESE IN BRACKETS BECAUSE MULTILINE, DUMMY!
-							if ((cx > 0) && (searchCells[cx, cy] < trailBest) && (searchCells[cx, cy] != 0)) { dx = -1; dy = 0; trailBest = searchCells[cx, cy]; }
+							if ((cx > 0) && (searchCells[cx, cy] < trailBest) && (searchCells[cx, cy] != 0))
+							{
+								dx = -1;
+								dy = 0;
+								trailBest = searchCells[cx, cy];
+							}
 							cx += 2; //to the right
-							if ((cx < maxSize) && (searchCells[cx, cy] < trailBest) && (searchCells[cx, cy] != 0)) { dx = 1; dy = 0; trailBest = searchCells[cx, cy]; }
+							if ((cx < maxSize) && (searchCells[cx, cy] < trailBest) && (searchCells[cx, cy] != 0))
+							{
+								dx = 1;
+								dy = 0;
+								trailBest = searchCells[cx, cy];
+							}
 							cx --;
 							cy--; //check above
-							if ((cy > 0) && (searchCells[cx, cy] < trailBest) && (searchCells[cx, cy] != 0)) { dx = 0; dy = -1; trailBest = searchCells[cx, cy]; }
+							if ((cy > 0) && (searchCells[cx, cy] < trailBest) && (searchCells[cx, cy] != 0))
+							{
+								dx = 0;
+								dy = -1;
+								trailBest = searchCells[cx, cy];
+							}
 							//check below
 							cy += 2;
-							if ((cy < maxSize) && (searchCells[cx, cy] < trailBest) && (searchCells[cx, cy] != 0)) { dx = 0; dy = 1; trailBest = searchCells[cx, cy]; }
+							if ((cy < maxSize) && (searchCells[cx, cy] < trailBest) && (searchCells[cx, cy] != 0))
+							{
+								dx = 0;
+								dy = 1;
+								trailBest = searchCells[cx, cy];
+							}
+
 							//now we've found the lowest, add that to the trail and update current pointer
 							tx += dx;
 							ty += dy;
@@ -289,7 +320,7 @@ namespace myMiniGame
 							//enemytrail x and y now contains the XY coordinates of the trail cells of the desired path
 							enemyTrailPosition[i] = 0;
 						}
-
+						//showSearch(searchCells, i);
 					}
 					else
 					{
@@ -303,24 +334,27 @@ namespace myMiniGame
 
 				if (enemyTrailPosition[i] < trailLength[i])
 				{
+					bool oldFlag = block[enemyX[i],enemyY[i]];
 					//figure out where the enemy's next move wants to be along the current path
 					enemyX[i] = enemyTrailX[i][enemyTrailPosition[i]];
 					enemyY[i] = enemyTrailY[i][enemyTrailPosition[i]];
 					enemyTrailPosition[i]++;
-					//check for collisions with player
+					if( !oldFlag && block[enemyX[i], enemyY[i]])
+					{
+						int l = 0;
+					}
 
+					//check for collisions with player
 					if ((enemyX[i] == playerX) && (enemyY[i] == playerY))
 					{
 						System.Media.SoundPlayer audio = new System.Media.SoundPlayer(Properties.Resources.ding);
 						audio.Play();
-						//System.Media.SoundPlayer player = new System.Media.SoundPlayer(@"c:\mywavfile.wav");
-						//player.Play();
 					}
 				}
 			}
 		}
 
-		private void showSearch(int[,] searchCells)
+		private void showSearch(int[,] searchCells, int e)
 		{
 			Console.WriteLine("\r------------------------------------------------------------");
 			string s = "";
@@ -330,6 +364,32 @@ namespace myMiniGame
 				{
 					if (block[x, y]) s += "X,";
 					else s += searchCells[x, y] + ",";
+				}
+				Console.WriteLine(s);
+				s = "";
+			}
+
+			s = "";
+			for (int y = 0; y < maxSize; y++)
+			{
+				for (int x = 0; x < maxSize; x++)
+				{
+					bool isTrail = false;
+					for (int i = 0; i < trailLength[e]; i++) if (enemyTrailX[e][i] == x && enemyTrailY[e][i] == y)
+						{
+							isTrail = true;
+							
+						}
+
+					if (isTrail)
+					{
+						s += "P,";
+					}
+					else
+					{
+						if (block[x, y]) s += "X,";
+						else s += searchCells[x, y] + ",";
+					}
 				}
 				Console.WriteLine(s);
 				s = "";
@@ -403,11 +463,19 @@ namespace myMiniGame
 			}
 		}
 
+
+
 		private void picRepaint(object sender, PaintEventArgs e)
 		{
 			tickCount++;
 			Text = tickCount.ToString();
 			if (tickCount < maxTicks) cellTick();
+			else
+			{
+				if (tickCount == maxTicks) initEnemies();
+				else isCalculating = false;
+			}
+
 			int w = 16;
 			//using (Graphics g = Graphics.)
 			//{
@@ -420,7 +488,7 @@ namespace myMiniGame
 					else g.FillRectangle(Brushes.White, i * w, j * w, w, w);
 				}
 			}
-			/*
+			
 			for (int i = 0; i < maxEnemies; i++)
 			{
 				for (int j = 0; j < trailLength[i]; j++)
@@ -433,7 +501,7 @@ namespace myMiniGame
 			g.FillEllipse(Brushes.LightGray, dtX[2] * w, dtY[2] * w, w, w);
 			g.FillEllipse(Brushes.LightPink, dtX[3] * w, dtY[3] * w, w, w);
 
-* 			*/
+
 
 			g.FillEllipse(Brushes.Yellow, enemyX[0] * w, enemyY[0] * w, w, w);
 			g.FillEllipse(Brushes.Blue, enemyX[1] * w, enemyY[1] * w, w, w);
@@ -453,6 +521,13 @@ namespace myMiniGame
 			{
 				enemyTimer = 0;
 				mainLoop();
+			}
+
+			playerTimer++;
+			if (playerTimer >= 4)
+			{
+				playerTimer = 0;
+				playerMoved();
 			}
 			
 		}
@@ -479,6 +554,20 @@ namespace myMiniGame
 
 		private void playerMoved()
 		{
+			//move player and check for collisions or out of bounds
+			playerX += playerMoveX;
+			if ((playerX >= maxSize) || (playerX <= 1) || (block[playerX, playerY]))
+			{// if the player goes invalid place, undo last movement and set move speed to zero
+				playerX -= playerMoveX;
+				playerMoveX = 0;
+			}
+			playerY += playerMoveY;
+			if ((playerY >= maxSize) || (playerY <= 1) || (block[playerX, playerY]))
+			{
+				playerY -= playerMoveY;
+				playerMoveY = 0;
+			}
+
 			lastPointer++;
 			if (lastPointer >= lastX.Length) lastPointer = 0;
 			lastX[lastPointer] = playerX;
@@ -498,35 +587,48 @@ namespace myMiniGame
 			//player movement
 			if (e.KeyCode == Keys.Down)
 			{
-				playerY++;
-				if ((playerY >= maxSize) || (block[playerX, playerY])) playerY--;
 				//check for collisions with background maze
-				playerMoved();
+				if ((playerY + 1 < maxSize) && (!block[playerX, playerY + 1]))
+				{
+					playerMoveX = 0;
+					playerMoveY = 1;
+				}
 			}
 			if (e.KeyCode == Keys.Up)
 			{
-				playerY--;
-				if ((playerY <= 0) || (block[playerX, playerY])) playerY++;
-				//check for collisions with background maze
-				playerMoved();
+				if ((playerY - 1 < maxSize) && (!block[playerX, playerY - 1]))
+				{
+					playerMoveX = 0;
+					playerMoveY = -1;
+				}
 			}
 			if (e.KeyCode == Keys.Right)
 			{
-				//check for collisions with background maze
-				playerX++;
-				if ((playerX >= maxSize) || (block[playerX, playerY])) playerX--;
-				playerMoved();
+				if ((playerX + 1 < maxSize) && (!block[playerX + 1, playerY]))
+				{
+					playerMoveX = 1;
+					playerMoveY = 0;
+				}
+
 			}
 			if (e.KeyCode == Keys.Left)
 			{
-				//check for collisions with background maze
-				playerX--;
-				if ((playerX <= 0) || (block[playerX, playerY])) playerX++;
-				playerMoved();
+				if ((playerX - 1 < maxSize) && (!block[playerX - 1, playerY]))
+				{
+					playerMoveX = -1;
+					playerMoveY = 0;
+				}
 			}
 		}
 
 
+		private void form_KeyUp(object sender, KeyEventArgs e)
+		{
+			if (e.KeyCode == Keys.Down)  playerMoveY = 0;
+			if (e.KeyCode == Keys.Up)    playerMoveY = 0;
+			if (e.KeyCode == Keys.Left)  playerMoveX = 0;
+			if (e.KeyCode == Keys.Right) playerMoveX = 0;
+		}
 
 		private void bUp_Click(object sender, EventArgs e)
 		{
