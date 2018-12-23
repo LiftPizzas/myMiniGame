@@ -41,18 +41,22 @@ namespace myMiniGame
 
 		int playerX = 1;
 		int playerY = 1;
+		int playerPrevX = 1;
+		int playerPrevY = 1;
 		int[] lastX, lastY;
 		int lastPointer = 0;
 		int playerMoveX, playerMoveY;
 		int playerTimer = 0;
 
 		bool isCalculating = true;
+		int[] enemyPrevX, enemyPrevY;
 		int[][] enemyTrailX; //enemy number, position in trail
 		int[][] enemyTrailY;
 		int maxTrailLength = 40;
 		int[] trailLength;
 		int[] enemyTrailPosition;
-		Brush[] enemyColor = new Brush[] { Brushes.LightGoldenrodYellow, Brushes.LightBlue, Brushes.LightGray, Brushes.LightPink };
+		Brush[] enemyColor = new Brush[] { Brushes.Yellow, Brushes.Blue, Brushes.Orange, Brushes.Red, Brushes.Cyan, Brushes.Violet, Brushes.Gray, Brushes.Navy };
+			//{ Brushes.LightGoldenrodYellow, Brushes.LightBlue, Brushes.LightGray, Brushes.LightPink };
 
 		public Form1()
 		{
@@ -74,6 +78,8 @@ namespace myMiniGame
 			buffer = new bool[maxSize, maxSize];
 			initBlocks(true);
 			myBitmap = new Bitmap(pictureBox1.Width, pictureBox1.Height);
+			enemyPrevX = new int[maxEnemies];
+			enemyPrevY = new int[maxEnemies];
 			enemyX = new int[maxEnemies];
 			enemyY = new int[maxEnemies];
 			moveX = new int[maxEnemies];
@@ -92,8 +98,8 @@ namespace myMiniGame
 		void initEnemies()
 		{
 			for (int i = 0; i < lastX.Length; i++) { lastX[i] = playerX; lastY[i] = playerY; }
-			
-			
+
+
 			for (int i = 0; i < maxEnemies; i++)
 			{
 				enemyStrategy[i] = i; //r.Next(3);
@@ -107,6 +113,8 @@ namespace myMiniGame
 					//check to see if it's a valid position, if not, adjust by one until it is.
 					if (!block[enemyX[i], enemyY[i]]) isValid = true;
 				}
+				enemyPrevX[i] = enemyX[i];
+				enemyPrevY[i] = enemyY[i];
 			}
 		}
 
@@ -140,9 +148,9 @@ namespace myMiniGame
 			{
 
 				enemyLine[i]--;
-				if (enemyTrailPosition[i] >= trailLength[i]-1 || enemyLine[i] <= 0)//decide when the enemy needs to make a new trail
+				if (enemyTrailPosition[i] >= trailLength[i] - 1 || enemyLine[i] <= 0)//decide when the enemy needs to make a new trail
 				{
-					enemyTrailPosition[i]=0;
+					enemyTrailPosition[i] = 0;
 					moveX[i] = 0;
 					moveY[i] = 0;
 					enemyLine[i] = r.Next(10);
@@ -197,7 +205,7 @@ namespace myMiniGame
 						int tx = leafListX[currentLeaf];
 						int ty = leafListY[currentLeaf];
 						trailLength[i] = searchCells[tx, ty] + 1; //neighbors will be this one's value plus 1
-						// values must be from 1-38 to be "valid" here otherwise we skip them in our search
+																  // values must be from 1-38 to be "valid" here otherwise we skip them in our search
 						if ((tx >= 1) && (tx <= maxSize - 2) && (ty >= 1) && (ty <= maxSize - 2))
 						{
 							tx--;//to the left
@@ -260,7 +268,7 @@ namespace myMiniGame
 						//iterate leaf list, update our pointer
 						currentLeaf++;//check if any leaves left
 						if ((currentLeaf > leafListX.Length) || (currentLeaf >= numLeaves)) doneFlag = true;
-						
+
 					}
 
 					if (successFlag)
@@ -271,13 +279,13 @@ namespace myMiniGame
 						int tx = enemyX[i];
 						int ty = enemyY[i];
 
-						while (trailBest > 1)  
+						while (trailBest > 1)
 						{
 							int dx = 0;
 							int dy = 0; //winning directions
 
 							//find the lowest neighbor:
-							int cx = tx -1;
+							int cx = tx - 1;
 							int cy = ty; //check to the left
 							if ((cx > 0) && (searchCells[cx, cy] < trailBest) && (searchCells[cx, cy] != 0))
 							{
@@ -292,7 +300,7 @@ namespace myMiniGame
 								dy = 0;
 								trailBest = searchCells[cx, cy];
 							}
-							cx --;
+							cx--;
 							cy--; //check above
 							if ((cy > 0) && (searchCells[cx, cy] < trailBest) && (searchCells[cx, cy] != 0))
 							{
@@ -315,8 +323,8 @@ namespace myMiniGame
 							enemyTrailX[i][trailLength[i]] = tx;
 							enemyTrailY[i][trailLength[i]] = ty;
 							trailLength[i]++;
-							if (dx == 0 && dy == 0 || trailLength[i] >= maxTrailLength-1)
-								break; 
+							if (dx == 0 && dy == 0 || trailLength[i] >= maxTrailLength - 1)
+								break;
 							//enemytrail x and y now contains the XY coordinates of the trail cells of the desired path
 							enemyTrailPosition[i] = 0;
 						}
@@ -334,22 +342,26 @@ namespace myMiniGame
 
 				if (enemyTrailPosition[i] < trailLength[i])
 				{
-					bool oldFlag = block[enemyX[i],enemyY[i]];
+					bool oldFlag = block[enemyX[i], enemyY[i]];
 					//figure out where the enemy's next move wants to be along the current path
+					enemyPrevX[i] = enemyX[i];
+					enemyPrevY[i] = enemyY[i];
 					enemyX[i] = enemyTrailX[i][enemyTrailPosition[i]];
 					enemyY[i] = enemyTrailY[i][enemyTrailPosition[i]];
 					enemyTrailPosition[i]++;
-					if( !oldFlag && block[enemyX[i], enemyY[i]])
+					if (!oldFlag && block[enemyX[i], enemyY[i]])
 					{
-						int l = 0;
+						;
 					}
 
+					
 					//check for collisions with player
-					if ((enemyX[i] == playerX) && (enemyY[i] == playerY))
+					if ((enemyX[i] - playerX == 0 && Math.Abs(enemyY[i] - playerY) == 1) || (enemyY[i] - playerY == 0 && Math.Abs(enemyX[i] - playerX) == 1))
 					{
 						System.Media.SoundPlayer audio = new System.Media.SoundPlayer(Properties.Resources.ding);
 						audio.Play();
 					}
+					
 				}
 			}
 		}
@@ -378,7 +390,7 @@ namespace myMiniGame
 					for (int i = 0; i < trailLength[e]; i++) if (enemyTrailX[e][i] == x && enemyTrailY[e][i] == y)
 						{
 							isTrail = true;
-							
+
 						}
 
 					if (isTrail)
@@ -476,7 +488,7 @@ namespace myMiniGame
 				else isCalculating = false;
 			}
 
-			int w = 16;
+			int w = 24;
 			//using (Graphics g = Graphics.)
 			//{
 			Graphics g = Graphics.FromImage(myBitmap);
@@ -488,7 +500,7 @@ namespace myMiniGame
 					else g.FillRectangle(Brushes.White, i * w, j * w, w, w);
 				}
 			}
-			
+			/*
 			for (int i = 0; i < maxEnemies; i++)
 			{
 				for (int j = 0; j < trailLength[i]; j++)
@@ -500,16 +512,21 @@ namespace myMiniGame
 			g.FillEllipse(Brushes.LightBlue, dtX[1] * w, dtY[1] * w, w, w);
 			g.FillEllipse(Brushes.LightGray, dtX[2] * w, dtY[2] * w, w, w);
 			g.FillEllipse(Brushes.LightPink, dtX[3] * w, dtY[3] * w, w, w);
+			*/
+			int drawX, drawY;
+			for (int i = 0; i < maxEnemies; i++)
+			{
+				drawX = (int)((enemyPrevX[i] + ((enemyX[i] - enemyPrevX[i]) * (enemyTimer * 0.125f))) * w);
+				drawY = (int)((enemyPrevY[i] + ((enemyY[i] - enemyPrevY[i]) * (enemyTimer * 0.125f))) * w);
 
+				g.FillEllipse(enemyColor[i], drawX, drawY, w, w);
+			}
 
-
-			g.FillEllipse(Brushes.Yellow, enemyX[0] * w, enemyY[0] * w, w, w);
-			g.FillEllipse(Brushes.Blue, enemyX[1] * w, enemyY[1] * w, w, w);
-			g.FillEllipse(Brushes.Orange, enemyX[2] * w, enemyY[2] * w, w, w);
-			g.FillEllipse(Brushes.Red, enemyX[3] * w, enemyY[3] * w, w, w);
-
-			g.FillEllipse(Brushes.Green, playerX * w, playerY * w, w, w);// draw the player
-			//}
+			//interpolate between player's previous and current positions, based on the "playertimer"               
+			drawX = (int)((playerPrevX + ((playerX - playerPrevX) * (playerTimer * 0.2f)) )* w);
+			drawY = (int)((playerPrevY + ((playerY - playerPrevY) * (playerTimer * 0.2f)) )* w);
+			g.FillEllipse(Brushes.Green, drawX, drawY, w, w);// draw the player
+																		 //}
 			g.Dispose();
 
 			pictureBox1.Image = myBitmap;
@@ -517,19 +534,19 @@ namespace myMiniGame
 
 			System.Threading.Thread.Sleep(33);
 			enemyTimer++;
-			if (enemyTimer > 6)
+			if (enemyTimer > 8)
 			{
 				enemyTimer = 0;
 				mainLoop();
 			}
 
 			playerTimer++;
-			if (playerTimer >= 4)
+			if (playerTimer >= 5)
 			{
 				playerTimer = 0;
 				playerMoved();
 			}
-			
+
 		}
 
 
@@ -552,8 +569,12 @@ namespace myMiniGame
 			return s;
 		}
 
+
 		private void playerMoved()
 		{
+			playerPrevX = playerX;
+			playerPrevY = playerY;
+
 			//move player and check for collisions or out of bounds
 			playerX += playerMoveX;
 			if ((playerX >= maxSize) || (playerX <= 1) || (block[playerX, playerY]))
@@ -567,6 +588,8 @@ namespace myMiniGame
 				playerY -= playerMoveY;
 				playerMoveY = 0;
 			}
+
+			Console.WriteLine(playerX + ", " + playerY);
 
 			lastPointer++;
 			if (lastPointer >= lastX.Length) lastPointer = 0;
@@ -624,9 +647,9 @@ namespace myMiniGame
 
 		private void form_KeyUp(object sender, KeyEventArgs e)
 		{
-			if (e.KeyCode == Keys.Down)  playerMoveY = 0;
-			if (e.KeyCode == Keys.Up)    playerMoveY = 0;
-			if (e.KeyCode == Keys.Left)  playerMoveX = 0;
+			if (e.KeyCode == Keys.Down) playerMoveY = 0;
+			if (e.KeyCode == Keys.Up) playerMoveY = 0;
+			if (e.KeyCode == Keys.Left) playerMoveX = 0;
 			if (e.KeyCode == Keys.Right) playerMoveX = 0;
 		}
 

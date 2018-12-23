@@ -45,7 +45,7 @@
 			// 
 			this.pictureBox1.Location = new System.Drawing.Point(0, 0);
 			this.pictureBox1.Name = "pictureBox1";
-			this.pictureBox1.Size = new System.Drawing.Size(800, 800);
+			this.pictureBox1.Size = new System.Drawing.Size(900, 900);
 			this.pictureBox1.TabIndex = 0;
 			this.pictureBox1.TabStop = false;
 			this.pictureBox1.Paint += new System.Windows.Forms.PaintEventHandler(this.picRepaint);
@@ -53,7 +53,7 @@
 			// groupBox1
 			// 
 			this.groupBox1.Controls.Add(this.label1);
-			this.groupBox1.Location = new System.Drawing.Point(806, 12);
+			this.groupBox1.Location = new System.Drawing.Point(906, 12);
 			this.groupBox1.Name = "groupBox1";
 			this.groupBox1.Size = new System.Drawing.Size(200, 53);
 			this.groupBox1.TabIndex = 2;
@@ -74,7 +74,7 @@
 			this.groupBox2.Controls.Add(this.bDown);
 			this.groupBox2.Controls.Add(this.bUp);
 			this.groupBox2.Controls.Add(this.textMaxTicks);
-			this.groupBox2.Location = new System.Drawing.Point(806, 72);
+			this.groupBox2.Location = new System.Drawing.Point(906, 72);
 			this.groupBox2.Name = "groupBox2";
 			this.groupBox2.Size = new System.Drawing.Size(200, 54);
 			this.groupBox2.TabIndex = 3;
@@ -111,7 +111,7 @@
 			// 
 			// button1
 			// 
-			this.button1.Location = new System.Drawing.Point(887, 133);
+			this.button1.Location = new System.Drawing.Point(987, 133);
 			this.button1.Name = "button1";
 			this.button1.Size = new System.Drawing.Size(75, 23);
 			this.button1.TabIndex = 4;
@@ -122,7 +122,7 @@
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(1050, 811);
+			this.ClientSize = new System.Drawing.Size(1124, 930);
 			this.Controls.Add(this.button1);
 			this.Controls.Add(this.groupBox2);
 			this.Controls.Add(this.groupBox1);
