@@ -77,7 +77,7 @@ namespace myMiniGame
 			block = new bool[maxSize, maxSize];
 			buffer = new bool[maxSize, maxSize];
 			initBlocks(true);
-			myBitmap = new Bitmap(pictureBox1.Width, pictureBox1.Height);
+			myBitmap = new Bitmap(pictureBox1.Width, pictureBox1.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
 			enemyPrevX = new int[maxEnemies];
 			enemyPrevY = new int[maxEnemies];
 			enemyX = new int[maxEnemies];
@@ -143,6 +143,7 @@ namespace myMiniGame
 		void mainLoop()
 		{
 			if (isCalculating) return;
+			
 			//AI Stuff here:
 			for (int i = 0; i < maxEnemies; i++)// for each enemy:
 			{
@@ -446,6 +447,10 @@ namespace myMiniGame
 
 		private void cellTick()
 		{
+			if (mazeCalculated)
+			{
+				; //fixme: remove after debugging
+			}
 			for (int i = 1; i < maxSize - 1; i++)
 			{
 				for (int j = 1; j < maxSize - 1; j++)
@@ -476,18 +481,8 @@ namespace myMiniGame
 		}
 
 
-
-		private void picRepaint(object sender, PaintEventArgs e)
+		private void oldPaintMethod()
 		{
-			tickCount++;
-			Text = tickCount.ToString();
-			if (tickCount < maxTicks) cellTick();
-			else
-			{
-				if (tickCount == maxTicks) initEnemies();
-				else isCalculating = false;
-			}
-
 			int w = 24;
 			//using (Graphics g = Graphics.)
 			//{
@@ -500,6 +495,18 @@ namespace myMiniGame
 					else g.FillRectangle(Brushes.White, i * w, j * w, w, w);
 				}
 			}
+
+			/*
+			for (int i = 0; i < maxSize; i++)
+			{
+				for (int j = 0; j < maxSize; j++)
+				{
+					if (block[i, j]) g.FillRectangle(Brushes.Black, i * w + 8, j * w + 8, w / 3, w / 3);
+					else g.FillRectangle(Brushes.White, i * w + 8, j * w + 8, w / 3, w / 3);
+				}
+			}
+			*/
+
 			/*
 			for (int i = 0; i < maxEnemies; i++)
 			{
@@ -523,10 +530,118 @@ namespace myMiniGame
 			}
 
 			//interpolate between player's previous and current positions, based on the "playertimer"               
-			drawX = (int)((playerPrevX + ((playerX - playerPrevX) * (playerTimer * 0.2f)) )* w);
-			drawY = (int)((playerPrevY + ((playerY - playerPrevY) * (playerTimer * 0.2f)) )* w);
+			drawX = (int)((playerPrevX + ((playerX - playerPrevX) * (playerTimer * 0.2f))) * w);
+			drawY = (int)((playerPrevY + ((playerY - playerPrevY) * (playerTimer * 0.2f))) * w);
 			g.FillEllipse(Brushes.Green, drawX, drawY, w, w);// draw the player
-																		 //}
+															 //}
+			g.Dispose();
+
+			pictureBox1.Image = myBitmap;
+		}
+
+		Bitmap mazeBackground;
+		bool mazeCalculated = false;
+		private void createBackgroundMaze()
+		{
+			int w = 24;
+			mazeBackground = new Bitmap(pictureBox1.Width, pictureBox1.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+			Graphics g = Graphics.FromImage(mazeBackground);
+			g.DrawImage(Properties.Resources.mg_background, 0, 0, 1000,1000);
+			//neighbor values
+			//  1
+			// 8 2
+			//  4
+			//gives us a number from 0-15, which we use to determine the shape
+
+			string blockShapes = "JABCDEFEGHEEIEEE";
+
+			for (int x = 1; x < maxSize - 1; x++)
+			{
+				for (int y = 1; y < maxSize - 1; y++)
+				{
+					if (block[x, y])
+					{
+						int v = 0;
+						if (block[x, y - 1]) v += 1;
+						if (block[x + 1, y]) v += 2;
+						if (block[x, y + 1]) v += 4;
+						if (block[x - 1, y]) v += 8;
+						//v is a number from 0-15
+						
+						Object mp = Properties.Resources.ResourceManager.GetObject("mg_maze_" + blockShapes.Substring(v, 1));
+						Bitmap myImage = (Bitmap)mp;
+						Image image = myImage;
+						g.DrawImage(myImage, x * w, y * w, w, w);
+					}
+				}
+			}
+
+			//draw the outside borders
+			for (int i = 0; i < maxSize; i++)
+			{
+				g.DrawImage(Properties.Resources.mg_maze_E, 0, i * w, w, w);
+				g.DrawImage(Properties.Resources.mg_maze_E, maxSize * w, i * w, w, w);
+				g.DrawImage(Properties.Resources.mg_maze_E, i * w, 0, w, w);
+				g.DrawImage(Properties.Resources.mg_maze_E, i * w, maxSize * w, w, w);
+			}
+
+		}
+
+		private void picRepaint(object sender, PaintEventArgs e)
+		{
+			tickCount++;
+			Text = tickCount.ToString();
+			if (tickCount < maxTicks) cellTick();
+			else
+			{
+				if (tickCount == maxTicks) initEnemies();
+				else isCalculating = false;
+				mazeCalculated = true;
+			}
+
+			//oldPaintMethod();
+
+			int w = 24;
+			//using (Graphics g = Graphics.)
+			//{
+			Graphics g = Graphics.FromImage(myBitmap);
+
+			//g.Clear(Color.White);
+
+			if (!mazeCalculated) createBackgroundMaze();
+			g.DrawImage(mazeBackground, 0, 0);
+
+
+
+			/*
+			for (int i = 0; i < maxEnemies; i++)
+			{
+				for (int j = 0; j < trailLength[i]; j++)
+				{
+					g.FillEllipse(enemyColor[i], enemyTrailX[i][j] * w, enemyTrailY[i][j] * w, w, w);
+				}
+			}
+			g.FillEllipse(Brushes.LightGoldenrodYellow, dtX[0] * w, dtY[0] * w, w, w);
+			g.FillEllipse(Brushes.LightBlue, dtX[1] * w, dtY[1] * w, w, w);
+			g.FillEllipse(Brushes.LightGray, dtX[2] * w, dtY[2] * w, w, w);
+			g.FillEllipse(Brushes.LightPink, dtX[3] * w, dtY[3] * w, w, w);
+			*/
+			int drawX, drawY;
+			for (int i = 0; i < maxEnemies; i++)
+			{
+				drawX = (int)((enemyPrevX[i] + ((enemyX[i] - enemyPrevX[i]) * (enemyTimer * 0.125f))) * w);
+				drawY = (int)((enemyPrevY[i] + ((enemyY[i] - enemyPrevY[i]) * (enemyTimer * 0.125f))) * w);
+				g.DrawImage(Properties.Resources.mg_player_A, drawX, drawY);
+			
+				//g.FillEllipse(enemyColor[i], drawX, drawY, w, w);
+			}
+
+			//interpolate between player's previous and current positions, based on the "playertimer"               
+			drawX = (int)((playerPrevX + ((playerX - playerPrevX) * (playerTimer * 0.2f))) * w);
+			drawY = (int)((playerPrevY + ((playerY - playerPrevY) * (playerTimer * 0.2f))) * w);
+
+			g.FillEllipse(Brushes.Green, drawX, drawY, w, w);// draw the player
+															 //}
 			g.Dispose();
 
 			pictureBox1.Image = myBitmap;

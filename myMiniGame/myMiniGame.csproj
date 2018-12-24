@@ -82,5 +82,22 @@
   <ItemGroup>
     <None Include="Resources\ding.wav" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="Resources\mg_background.png" />
+    <Content Include="Resources\mg_maze_A.png" />
+    <Content Include="Resources\mg_maze_B.png" />
+    <Content Include="Resources\mg_maze_C.png" />
+    <Content Include="Resources\mg_maze_D.png" />
+    <Content Include="Resources\mg_maze_E.png" />
+    <Content Include="Resources\mg_maze_F.png" />
+    <Content Include="Resources\mg_maze_G.png" />
+    <Content Include="Resources\mg_maze_H.png" />
+    <Content Include="Resources\mg_maze_I.png" />
+    <Content Include="Resources\mg_maze_J.png" />
+    <Content Include="Resources\mg_player_A.png" />
+    <Content Include="Resources\mg_player_B.png" />
+    <Content Include="Resources\mg_player_C.png" />
+    <Content Include="Resources\mg_player_D.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
