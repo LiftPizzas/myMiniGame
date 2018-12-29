@@ -94,6 +94,10 @@
     <Content Include="Resources\mg_maze_H.png" />
     <Content Include="Resources\mg_maze_I.png" />
     <Content Include="Resources\mg_maze_J.png" />
+    <Content Include="Resources\mg_playerblue_A.png" />
+    <Content Include="Resources\mg_playerblue_B.png" />
+    <Content Include="Resources\mg_playerblue_C.png" />
+    <Content Include="Resources\mg_playerblue_D.png" />
     <Content Include="Resources\mg_player_A.png" />
     <Content Include="Resources\mg_player_B.png" />
     <Content Include="Resources\mg_player_C.png" />

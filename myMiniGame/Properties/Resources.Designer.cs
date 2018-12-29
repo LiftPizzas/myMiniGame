@@ -82,6 +82,46 @@ namespace myMiniGame.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap mg_enemy_A {
+            get {
+                object obj = ResourceManager.GetObject("mg_enemy_A", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap mg_enemy_B {
+            get {
+                object obj = ResourceManager.GetObject("mg_enemy_B", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap mg_enemy_C {
+            get {
+                object obj = ResourceManager.GetObject("mg_enemy_C", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap mg_enemy_D {
+            get {
+                object obj = ResourceManager.GetObject("mg_enemy_D", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap mg_maze_A {
             get {
                 object obj = ResourceManager.GetObject("mg_maze_A", resourceCulture);
@@ -182,9 +222,9 @@ namespace myMiniGame.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap mg_player_A {
+        internal static System.Drawing.Bitmap mg_playerblue_A {
             get {
-                object obj = ResourceManager.GetObject("mg_player_A", resourceCulture);
+                object obj = ResourceManager.GetObject("mg_playerblue_A", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -192,9 +232,9 @@ namespace myMiniGame.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap mg_player_B {
+        internal static System.Drawing.Bitmap mg_playerblue_B {
             get {
-                object obj = ResourceManager.GetObject("mg_player_B", resourceCulture);
+                object obj = ResourceManager.GetObject("mg_playerblue_B", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -202,9 +242,9 @@ namespace myMiniGame.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap mg_player_C {
+        internal static System.Drawing.Bitmap mg_playerblue_C {
             get {
-                object obj = ResourceManager.GetObject("mg_player_C", resourceCulture);
+                object obj = ResourceManager.GetObject("mg_playerblue_C", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -212,9 +252,9 @@ namespace myMiniGame.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap mg_player_D {
+        internal static System.Drawing.Bitmap mg_playerblue_D {
             get {
-                object obj = ResourceManager.GetObject("mg_player_D", resourceCulture);
+                object obj = ResourceManager.GetObject("mg_playerblue_D", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

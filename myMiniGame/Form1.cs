@@ -18,7 +18,7 @@ namespace myMiniGame
 {
 	public partial class Form1 : Form
 	{
-		int maxEnemies = 4;
+		int maxEnemies = 6;
 		int[] enemyX, enemyY, targetX, targetY, moveX, moveY;
 		int[] enemyTrapped;
 		int enemyTimer = 0;
@@ -91,8 +91,8 @@ namespace myMiniGame
 			enemyTrapped = new int[maxEnemies];
 			enemyStrategy = new int[maxEnemies];
 			enemyLine = new int[maxEnemies];
-			lastX = new int[10];
-			lastY = new int[10];
+			lastX = new int[1600];
+			lastY = new int[1600];
 		}
 
 		void initEnemies()
@@ -174,162 +174,165 @@ namespace myMiniGame
 						targetX[i] = lastX[tPointer];
 						targetY[i] = lastY[tPointer];
 					}
-					else
+					else if (enemyStrategy[i] ==3)
 					{ //just wander toward a random target
 						targetX[i] = r.Next(maxSize - 2) + 1;
 						targetY[i] = r.Next(maxSize - 2) + 1;
 					}
-					//ensure target is within the bounds of the playfield (values 1-38, because 0 and 39 are the borders)
-					if (targetX[i] < 1) targetX[i] = 1; else if (targetX[i] >= maxSize - 2) targetX[i] = maxSize - 2;
-					if (targetY[i] < 1) targetY[i] = 1; else if (targetY[i] >= maxSize - 2) targetY[i] = maxSize - 2;
-
-					dtX[i] = targetX[i];
-					dtY[i] = targetY[i];
-
-					int[,] searchCells = new int[maxSize, maxSize];
-					int[] leafListX = new int[1600];
-					int[] leafListY = new int[1600];
-					int numLeaves = 1;
-					int currentLeaf = 0;
-					leafListX[0] = targetX[i];
-					leafListY[0] = targetY[i];
-					bool doneFlag = false;
-					trailLength[i] = 1;
-					bool successFlag = false;
-
-					while (!doneFlag)
+					if (enemyStrategy[i] < 4)
 					{
+						//ensure target is within the bounds of the playfield (values 1-38, because 0 and 39 are the borders)
+						if (targetX[i] < 1) targetX[i] = 1; else if (targetX[i] >= maxSize - 2) targetX[i] = maxSize - 2;
+						if (targetY[i] < 1) targetY[i] = 1; else if (targetY[i] >= maxSize - 2) targetY[i] = maxSize - 2;
 
-						// for each leaf in the list
-						//check each of the 4 neighbors
+						dtX[i] = targetX[i];
+						dtY[i] = targetY[i];
 
-						int tx = leafListX[currentLeaf];
-						int ty = leafListY[currentLeaf];
-						trailLength[i] = searchCells[tx, ty] + 1; //neighbors will be this one's value plus 1
-																  // values must be from 1-38 to be "valid" here otherwise we skip them in our search
-						if ((tx >= 1) && (tx <= maxSize - 2) && (ty >= 1) && (ty <= maxSize - 2))
+						int[,] searchCells = new int[maxSize, maxSize];
+						int[] leafListX = new int[1600];
+						int[] leafListY = new int[1600];
+						int numLeaves = 1;
+						int currentLeaf = 0;
+						leafListX[0] = targetX[i];
+						leafListY[0] = targetY[i];
+						bool doneFlag = false;
+						trailLength[i] = 1;
+						bool successFlag = false;
+
+						while (!doneFlag)
 						{
-							tx--;//to the left
-							if (tx >= 1)
-							{
-								if (!block[tx, ty] && (searchCells[tx, ty] == 0))//if the neighbor is empty and not already filled in
-								{// give it a position number and add it to the leaf list
-									if ((tx == enemyX[i]) && (ty == enemyY[i])) { doneFlag = true; successFlag = true; }
-									searchCells[tx, ty] = trailLength[i];
-									leafListX[numLeaves] = tx;
-									leafListY[numLeaves] = ty;
-									numLeaves++;
-								}
-							}
 
-							//right
-							tx += 2;
-							if (tx <= maxSize - 2)
-							{
-								if (!block[tx, ty] && (searchCells[tx, ty] == 0))//if the neighbor is empty and not already filled in
-								{// give it a position number and add it to the leaf list
-									if ((tx == enemyX[i]) && (ty == enemyY[i])) { doneFlag = true; successFlag = true; }
-									searchCells[tx, ty] = trailLength[i];
-									leafListX[numLeaves] = tx;
-									leafListY[numLeaves] = ty;
-									numLeaves++;
-								}
-							}
+							// for each leaf in the list
+							//check each of the 4 neighbors
 
-							//above
-							tx -= 1;
-							ty -= 1;
-							if (ty >= 1)
+							int tx = leafListX[currentLeaf];
+							int ty = leafListY[currentLeaf];
+							trailLength[i] = searchCells[tx, ty] + 1; //neighbors will be this one's value plus 1
+																	  // values must be from 1-38 to be "valid" here otherwise we skip them in our search
+							if ((tx >= 1) && (tx <= maxSize - 2) && (ty >= 1) && (ty <= maxSize - 2))
 							{
-								if (!block[tx, ty] && (searchCells[tx, ty] == 0))//if the neighbor is empty and not already filled in
-								{// give it a position number and add it to the leaf list
-									if ((tx == enemyX[i]) && (ty == enemyY[i])) { doneFlag = true; successFlag = true; }
-									searchCells[tx, ty] = trailLength[i];
-									leafListX[numLeaves] = tx;
-									leafListY[numLeaves] = ty;
-									numLeaves++;
+								tx--;//to the left
+								if (tx >= 1)
+								{
+									if (!block[tx, ty] && (searchCells[tx, ty] == 0))//if the neighbor is empty and not already filled in
+									{// give it a position number and add it to the leaf list
+										if ((tx == enemyX[i]) && (ty == enemyY[i])) { doneFlag = true; successFlag = true; }
+										searchCells[tx, ty] = trailLength[i];
+										leafListX[numLeaves] = tx;
+										leafListY[numLeaves] = ty;
+										numLeaves++;
+									}
 								}
-							}
 
-							//below
-							ty += 2;
-							if (ty <= maxSize - 2)
-							{
-								if (!block[tx, ty] && (searchCells[tx, ty] == 0))//if the neighbor is empty and not already filled in
-								{// give it a position number and add it to the leaf list
-									if ((tx == enemyX[i]) && (ty == enemyY[i])) { doneFlag = true; successFlag = true; }
-									searchCells[tx, ty] = trailLength[i];
-									leafListX[numLeaves] = tx;
-									leafListY[numLeaves] = ty;
-									numLeaves++;
+								//right
+								tx += 2;
+								if (tx <= maxSize - 2)
+								{
+									if (!block[tx, ty] && (searchCells[tx, ty] == 0))//if the neighbor is empty and not already filled in
+									{// give it a position number and add it to the leaf list
+										if ((tx == enemyX[i]) && (ty == enemyY[i])) { doneFlag = true; successFlag = true; }
+										searchCells[tx, ty] = trailLength[i];
+										leafListX[numLeaves] = tx;
+										leafListY[numLeaves] = ty;
+										numLeaves++;
+									}
 								}
+
+								//above
+								tx -= 1;
+								ty -= 1;
+								if (ty >= 1)
+								{
+									if (!block[tx, ty] && (searchCells[tx, ty] == 0))//if the neighbor is empty and not already filled in
+									{// give it a position number and add it to the leaf list
+										if ((tx == enemyX[i]) && (ty == enemyY[i])) { doneFlag = true; successFlag = true; }
+										searchCells[tx, ty] = trailLength[i];
+										leafListX[numLeaves] = tx;
+										leafListY[numLeaves] = ty;
+										numLeaves++;
+									}
+								}
+
+								//below
+								ty += 2;
+								if (ty <= maxSize - 2)
+								{
+									if (!block[tx, ty] && (searchCells[tx, ty] == 0))//if the neighbor is empty and not already filled in
+									{// give it a position number and add it to the leaf list
+										if ((tx == enemyX[i]) && (ty == enemyY[i])) { doneFlag = true; successFlag = true; }
+										searchCells[tx, ty] = trailLength[i];
+										leafListX[numLeaves] = tx;
+										leafListY[numLeaves] = ty;
+										numLeaves++;
+									}
+								}
+								//trailLength[i]++; //increment the trail counter
 							}
-							//trailLength[i]++; //increment the trail counter
+							//iterate leaf list, update our pointer
+							currentLeaf++;//check if any leaves left
+							if ((currentLeaf > leafListX.Length) || (currentLeaf >= numLeaves)) doneFlag = true;
+
 						}
-						//iterate leaf list, update our pointer
-						currentLeaf++;//check if any leaves left
-						if ((currentLeaf > leafListX.Length) || (currentLeaf >= numLeaves)) doneFlag = true;
 
-					}
+						if (successFlag)
+						{//assemble the trail from the last position to the target
+						 //starting at enemyY we're going to find the lowest neighbor
+							int trailBest = 9999999;
+							trailLength[i] = 0;
+							int tx = enemyX[i];
+							int ty = enemyY[i];
 
-					if (successFlag)
-					{//assemble the trail from the last position to the target
-					 //starting at enemyY we're going to find the lowest neighbor
-						int trailBest = 9999999;
-						trailLength[i] = 0;
-						int tx = enemyX[i];
-						int ty = enemyY[i];
-
-						while (trailBest > 1)
-						{
-							int dx = 0;
-							int dy = 0; //winning directions
-
-							//find the lowest neighbor:
-							int cx = tx - 1;
-							int cy = ty; //check to the left
-							if ((cx > 0) && (searchCells[cx, cy] < trailBest) && (searchCells[cx, cy] != 0))
+							while (trailBest > 1)
 							{
-								dx = -1;
-								dy = 0;
-								trailBest = searchCells[cx, cy];
-							}
-							cx += 2; //to the right
-							if ((cx < maxSize) && (searchCells[cx, cy] < trailBest) && (searchCells[cx, cy] != 0))
-							{
-								dx = 1;
-								dy = 0;
-								trailBest = searchCells[cx, cy];
-							}
-							cx--;
-							cy--; //check above
-							if ((cy > 0) && (searchCells[cx, cy] < trailBest) && (searchCells[cx, cy] != 0))
-							{
-								dx = 0;
-								dy = -1;
-								trailBest = searchCells[cx, cy];
-							}
-							//check below
-							cy += 2;
-							if ((cy < maxSize) && (searchCells[cx, cy] < trailBest) && (searchCells[cx, cy] != 0))
-							{
-								dx = 0;
-								dy = 1;
-								trailBest = searchCells[cx, cy];
-							}
+								int dx = 0;
+								int dy = 0; //winning directions
 
-							//now we've found the lowest, add that to the trail and update current pointer
-							tx += dx;
-							ty += dy;
-							enemyTrailX[i][trailLength[i]] = tx;
-							enemyTrailY[i][trailLength[i]] = ty;
-							trailLength[i]++;
-							if (dx == 0 && dy == 0 || trailLength[i] >= maxTrailLength - 1)
-								break;
-							//enemytrail x and y now contains the XY coordinates of the trail cells of the desired path
-							enemyTrailPosition[i] = 0;
+								//find the lowest neighbor:
+								int cx = tx - 1;
+								int cy = ty; //check to the left
+								if ((cx > 0) && (searchCells[cx, cy] < trailBest) && (searchCells[cx, cy] != 0))
+								{
+									dx = -1;
+									dy = 0;
+									trailBest = searchCells[cx, cy];
+								}
+								cx += 2; //to the right
+								if ((cx < maxSize) && (searchCells[cx, cy] < trailBest) && (searchCells[cx, cy] != 0))
+								{
+									dx = 1;
+									dy = 0;
+									trailBest = searchCells[cx, cy];
+								}
+								cx--;
+								cy--; //check above
+								if ((cy > 0) && (searchCells[cx, cy] < trailBest) && (searchCells[cx, cy] != 0))
+								{
+									dx = 0;
+									dy = -1;
+									trailBest = searchCells[cx, cy];
+								}
+								//check below
+								cy += 2;
+								if ((cy < maxSize) && (searchCells[cx, cy] < trailBest) && (searchCells[cx, cy] != 0))
+								{
+									dx = 0;
+									dy = 1;
+									trailBest = searchCells[cx, cy];
+								}
+
+								//now we've found the lowest, add that to the trail and update current pointer
+								tx += dx;
+								ty += dy;
+								enemyTrailX[i][trailLength[i]] = tx;
+								enemyTrailY[i][trailLength[i]] = ty;
+								trailLength[i]++;
+								if (dx == 0 && dy == 0 || trailLength[i] >= maxTrailLength - 1)
+									break;
+								//enemytrail x and y now contains the XY coordinates of the trail cells of the desired path
+								enemyTrailPosition[i] = 0;
+							}
+							//showSearch(searchCells, i);
 						}
-						//showSearch(searchCells, i);
 					}
 					else
 					{
@@ -340,29 +343,50 @@ namespace myMiniGame
 
 				}
 
-
-				if (enemyTrailPosition[i] < trailLength[i])
+				if (enemyStrategy[i] == 4) //actively following player scent trail
 				{
-					bool oldFlag = block[enemyX[i], enemyY[i]];
-					//figure out where the enemy's next move wants to be along the current path
-					enemyPrevX[i] = enemyX[i];
-					enemyPrevY[i] = enemyY[i];
-					enemyX[i] = enemyTrailX[i][enemyTrailPosition[i]];
-					enemyY[i] = enemyTrailY[i][enemyTrailPosition[i]];
 					enemyTrailPosition[i]++;
-					if (!oldFlag && block[enemyX[i], enemyY[i]])
+					enemyX[i] = lastX[enemyTrailPosition[i]];
+					enemyY[i] = lastY[enemyTrailPosition[i]];
+				}
+				else
+				{
+					if (enemyTrailPosition[i] < trailLength[i])
 					{
-						;
-					}
+						bool oldFlag = block[enemyX[i], enemyY[i]];
+						//figure out where the enemy's next move wants to be along the current path
+						enemyPrevX[i] = enemyX[i];
+						enemyPrevY[i] = enemyY[i];
+						enemyX[i] = enemyTrailX[i][enemyTrailPosition[i]];
+						enemyY[i] = enemyTrailY[i][enemyTrailPosition[i]];
+						enemyTrailPosition[i]++;
+						if (!oldFlag && block[enemyX[i], enemyY[i]])
+						{
+							;
+						}
 
-					
-					//check for collisions with player
-					if ((enemyX[i] - playerX == 0 && Math.Abs(enemyY[i] - playerY) == 1) || (enemyY[i] - playerY == 0 && Math.Abs(enemyX[i] - playerX) == 1))
-					{
-						System.Media.SoundPlayer audio = new System.Media.SoundPlayer(Properties.Resources.ding);
-						audio.Play();
+
+						//check for collision with player's scent trail					
+						if (enemyStrategy[i] == 3)// random wanderer
+						{
+							int ex = enemyX[i];
+							int ey = enemyY[i];
+							for (int p = lastPointer; p > 0; p--)
+							{
+								if (lastX[p] == ex && lastY[p] == ey)
+								{
+									enemyStrategy[i] = 4;
+									enemyTrailPosition[i] = p;
+								}
+							}
+						}
 					}
-					
+				}
+				//check for collisions with player
+				if ((enemyX[i] - playerX == 0 && Math.Abs(enemyY[i] - playerY) == 1) || (enemyY[i] - playerY == 0 && Math.Abs(enemyX[i] - playerX) == 1))
+				{
+					System.Media.SoundPlayer audio = new System.Media.SoundPlayer(Properties.Resources.ding);
+					audio.Play();
 				}
 			}
 		}
@@ -574,7 +598,7 @@ namespace myMiniGame
 						g.DrawImage(myImage, x * w, y * w, w, w);
 					}
 				}
-			}
+			} 
 
 			//draw the outside borders
 			for (int i = 0; i < maxSize; i++)
@@ -587,6 +611,18 @@ namespace myMiniGame
 
 		}
 
+		private void fixMaze()
+		{
+			for (int x = 1; x < 6; x++)
+			{
+				for (int y = 1; y < 6; y++)
+				{
+					block[x, y] = false;
+				}
+			}
+			//fixme: do a floodfill to find out if there's a path to the finish
+		}
+
 		private void picRepaint(object sender, PaintEventArgs e)
 		{
 			tickCount++;
@@ -594,7 +630,12 @@ namespace myMiniGame
 			if (tickCount < maxTicks) cellTick();
 			else
 			{
-				if (tickCount == maxTicks) initEnemies();
+				if (tickCount == maxTicks)
+				{
+					fixMaze();
+					createBackgroundMaze();
+					initEnemies();
+				}
 				else isCalculating = false;
 				mazeCalculated = true;
 			}
@@ -628,28 +669,47 @@ namespace myMiniGame
 			*/
 			int drawX, drawY;
 			for (int i = 0; i < maxEnemies; i++)
-			{
-				drawX = (int)((enemyPrevX[i] + ((enemyX[i] - enemyPrevX[i]) * (enemyTimer * 0.125f))) * w);
-				drawY = (int)((enemyPrevY[i] + ((enemyY[i] - enemyPrevY[i]) * (enemyTimer * 0.125f))) * w);
-				g.DrawImage(Properties.Resources.mg_player_A, drawX, drawY);
-			
+			{	
+				int xdir = enemyX[i] - enemyPrevX[i];
+				int ydir = enemyY[i] - enemyPrevY[i];
+				drawX = (int)((enemyPrevX[i] + (xdir * (enemyTimer * 0.04f))) * w);
+				drawY = (int)((enemyPrevY[i] + (ydir * (enemyTimer * 0.04f))) * w);
+
+				if (xdir > 0) g.DrawImage(Properties.Resources.mg_enemy_B, drawX, drawY);
+				else if (xdir < 0) g.DrawImage(Properties.Resources.mg_enemy_D, drawX, drawY);
+				else if (ydir > 0) g.DrawImage(Properties.Resources.mg_enemy_C, drawX, drawY);
+				else g.DrawImage(Properties.Resources.mg_enemy_A, drawX, drawY);
+
 				//g.FillEllipse(enemyColor[i], drawX, drawY, w, w);
 			}
 
-			//interpolate between player's previous and current positions, based on the "playertimer"               
-			drawX = (int)((playerPrevX + ((playerX - playerPrevX) * (playerTimer * 0.2f))) * w);
-			drawY = (int)((playerPrevY + ((playerY - playerPrevY) * (playerTimer * 0.2f))) * w);
+			//display player's "scent trail"
+			for (int i = 0; i < lastX.Length; i++)
+			{
+				g.DrawEllipse (Pens.LightGreen, lastX[i]*w, lastY[i]*w, w, w);// draw the player
+			}
 
-			g.FillEllipse(Brushes.Green, drawX, drawY, w, w);// draw the player
-															 //}
+			//interpolate between player's previous and current positions, based on the "playertimer"      
+			int xd = playerX - playerPrevX;
+			int yd = playerY - playerPrevY;
+			drawX = (int)((playerPrevX + (xd * (playerTimer * 0.2f))) * w);
+			drawY = (int)((playerPrevY + (yd * (playerTimer * 0.2f))) * w);
+
+			if (xd > 0) g.DrawImage(Properties.Resources.mg_playerblue_B, drawX, drawY);
+			else if (xd < 0) g.DrawImage(Properties.Resources.mg_playerblue_D, drawX, drawY);
+			else if (yd > 0) g.DrawImage(Properties.Resources.mg_playerblue_C, drawX, drawY);
+			else g.DrawImage(Properties.Resources.mg_playerblue_A, drawX, drawY);
+
+			//g.FillEllipse(Brushes.Green, drawX, drawY, w, w);// draw the player
+			//}
 			g.Dispose();
 
 			pictureBox1.Image = myBitmap;
 			//this.Text = r.Next(10).ToString();
 
-			System.Threading.Thread.Sleep(33);
+			System.Threading.Thread.Sleep(10);
 			enemyTimer++;
-			if (enemyTimer > 8)
+			if (enemyTimer > 24)
 			{
 				enemyTimer = 0;
 				mainLoop();
